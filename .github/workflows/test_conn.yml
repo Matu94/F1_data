@@ -1,0 +1,39 @@
+# .github/workflows/test-connection.yml
+
+name: Test Snowflake Connection
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-snowflake-connection:
+    name: Test Connection to Snowflake
+    runs-on: ubuntu-latest
+
+    # Define environment variables at the job level
+    # This makes them available to all steps below
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_DATABASE: ${{ secrets.CICD_DEMO_DB }}
+      SNOWFLAKE_PRIVATE_KEY_RAW: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_RAW }}
+      PRIVATE_KEY_PASSPHRASE: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}
+      # FOR KEYPAIR WE NEED TIHS - JSON Web Token
+      SNOWFLAKE_AUTHENTICATOR: 'SNOWFLAKE_JWT'
+
+    steps:
+      # Step 1: Installs and configures the Snow CLI using the job-level env vars
+      - name: Setup Snow CLI
+        uses: snowflakedb/snowflake-cli-action@v1.5
+
+      # Step 2: Runs commands using the now-configured CLI
+      - name: Run test queries
+        run: |
+          echo "Verifying Snow CLI installation..."
+          snow --version
+
+          echo "Testing connection and running queries..."
+          snow sql -q "SELECT CURRENT_USER(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE()" --temporary-connection
+          snow sql -q "SELECT 'Connection successful!' as TEST_MESSAGE" --temporary-connection
