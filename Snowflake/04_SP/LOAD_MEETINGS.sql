@@ -12,9 +12,11 @@ import json
 import sys
 
 def main(session):
+
     """
     Get the data from the API endpoint and load it to the MEETINGS table from 2025.
     """
+
     API_URL = "https://api.openf1.org/v1/meetings?year=2025"
     TARGET_TABLE = "F1.RAW.MEETINGS"
     
