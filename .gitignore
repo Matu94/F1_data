@@ -1,2 +1,3 @@
 # Ignore macOS folder settings file
 .DS_Store
+.ipynb_checkpoints
