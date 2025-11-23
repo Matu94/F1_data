@@ -15,8 +15,7 @@ import sys
 def main(session):
 
     """
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!    MAYBE I WILL NOT USE THIS     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    Get the data from the API endpoint and load it to the MEETINGS table from 2025.
+    Provides information about meetings. A meeting refers to a Grand Prix or testing weekend and usually includes multiple sessions (practice, qualifying, race, ...).
     """
 
     API_URL = "https://api.openf1.org/v1/meetings?year=2025"
