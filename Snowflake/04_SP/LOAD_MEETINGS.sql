@@ -1,6 +1,7 @@
 CREATE OR REPLACE PROCEDURE RAW.SP_LOAD_ALL_MEETINGS()
 RETURNS VARCHAR
 LANGUAGE PYTHON
+COMMENT = 'F1 project: Get the data from the API endpoint and load it to the MEETINGS table'
 RUNTIME_VERSION = '3.9'
 PACKAGES = ('snowflake-snowpark-python')
 HANDLER = 'main'
@@ -14,6 +15,7 @@ import sys
 def main(session):
 
     """
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!    MAYBE I WILL NOT USE THIS     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     Get the data from the API endpoint and load it to the MEETINGS table from 2025.
     """
 
