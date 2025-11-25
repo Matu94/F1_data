@@ -15,6 +15,6 @@ SELECT
     TRY_TO_TIMESTAMP_TZ(RAW_PAYLOAD:date_start::STRING) AS date_start,
     TRY_TO_TIMESTAMP_TZ(RAW_PAYLOAD:date_end::STRING)   AS date_end,
     RAW_PAYLOAD:gmt_offset::TIME           AS gmt_offset,
-    RAW_PAYLOAD:year::INTEGER              AS year
+    RAW_PAYLOAD:year::INTEGER              AS year,
     LOADED_AT
 FROM RAW.SESSIONS; 
