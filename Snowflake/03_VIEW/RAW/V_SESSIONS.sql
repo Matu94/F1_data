@@ -14,7 +14,7 @@ SELECT
     RAW_PAYLOAD:session_type::STRING       AS session_type,
     TRY_TO_TIMESTAMP_TZ(RAW_PAYLOAD:date_start::STRING) AS date_start,
     TRY_TO_TIMESTAMP_TZ(RAW_PAYLOAD:date_end::STRING)   AS date_end,
-    RAW_PAYLOAD:gmt_offset::TIME           AS gmt_offset,
+    RAW_PAYLOAD:gmt_offset::VARCHAR           AS gmt_offset,
     RAW_PAYLOAD:year::INTEGER              AS year,
     LOADED_AT
 FROM RAW.SESSIONS; 
