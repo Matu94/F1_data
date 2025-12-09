@@ -1,62 +1,82 @@
 CREATE OR REPLACE PROCEDURE RAW.SP_LOAD_ALL_POSITIONS()
-RETURNS STRING
+RETURNS VARCHAR
 LANGUAGE PYTHON
 COMMENT = 'F1 project: Get the data from the API endpoint and load it to the POSITIONS table'
 RUNTIME_VERSION = '3.9'
-PACKAGES = ('snowflake-snowpark-python', 'requests', 'pandas')
+PACKAGES = ('snowflake-snowpark-python')
 HANDLER = 'main'
 EXTERNAL_ACCESS_INTEGRATIONS = (F1_API_INTEGRATION)
 EXECUTE AS OWNER
-AS
+AS 
 $$
-import snowflake.snowpark as snowpark
-import requests
-import pandas as pd
+import urllib.request
+import json
+import sys
 
-def main(session: snowpark.Session):
-    # 1. Get the list of session_keys from the RAW.V_SESSIONS
-    # use collect() to bring the keys into Python memory for looping
-    # Note: Snowflake returns column names in UPPERCASE by default
-    session_rows = session.sql("SELECT DISTINCT session_key FROM RAW.V_SESSIONS where session_type = 'Race'").collect()
+def main(session):
+
+    """
+    Loads position data for all Race sessions found in RAW.V_SESSIONS.
+    """
+
+    API_BASE_URL = "https://api.openf1.org/v1/position"
+    TARGET_TABLE = "RAW.POSITIONS"
     
-    base_url = "https://api.openf1.org/v1/position"
-    all_positions_data = []
-    processed_count = 0
-    
-    # 2. Loop through each session and fetch data
-    for row in session_rows:
-        s_key = row['SESSION_KEY']
+    try:
+        # 1. Get the list of session_keys from RAW.V_SESSIONS
+        # We assume V_SESSIONS is available and populated
+        session_rows = session.sql("SELECT DISTINCT session_key FROM RAW.V_SESSIONS WHERE session_type = 'Race'").collect()
         
-        # build the parameterized URL
-        api_url = f"{base_url}?session_key={s_key}"
+        if not session_rows:
+            return "Info: No 'Race' sessions found in V_SESSIONS to process."
+
+        # 2. Truncate the target table (Full Refresh pattern matches your Meetings SP)
+        session.sql(f"TRUNCATE TABLE {TARGET_TABLE}").collect()
         
-        try:
-            response = requests.get(api_url)
-            response.raise_for_status() # Raise error for bad responses 
+        total_row_count = 0
+        sessions_processed = 0
+
+        # 3. Loop through each session and fetch data
+        for row in session_rows:
+            s_key = row['SESSION_KEY']
             
-            data = response.json()
+            # Build the URL with the session key parameter
+            url = f"{API_BASE_URL}?session_key={s_key}"
             
-            # The API returns a list of position objects
-            if isinstance(data, list) and len(data) > 0:
-                all_positions_data.extend(data)
+            try:
+                req = urllib.request.Request(url)
+                with urllib.request.urlopen(req) as response:
+                    if response.getcode() != 200:
+                        print(f"Warning: API returned status {response.getcode()} for session {s_key}")
+                        continue
+                    
+                    positions_data = json.loads(response.read())
+
+                if not positions_data:
+                    print(f"Info: No position data found for session {s_key}")
+                    continue
+
+                # 4. Insert into the target table
+                # We loop through the list and insert each record safely
+                for position_record in positions_data:
+                    json_string = json.dumps(position_record)
+                    
+                    session.sql(
+                        f"INSERT INTO {TARGET_TABLE} (RAW_PAYLOAD) SELECT PARSE_JSON(?);",
+                        params=[json_string]
+                    ).collect()
+                    total_row_count += 1
                 
-            processed_count += 1
-            
-        except Exception as e:
-            # log errors instead of failing completely 
-            print(f"Error fetching data for session {s_key}: {e}")
+                sessions_processed += 1
 
-    # 3. Write Data to Snowflake
-    if all_positions_data:
-        # Create a DataFrame from the collected list of dicts
-        # Snowpark will automatically infer the schema from the JSON keys
-        df = session.create_dataframe(all_positions_data)
-        
-        # Write to the target table (Mode: append to add to existing data)
-        # Ensure the target table RAW.POSITIONS exists or let Snowpark create it
-        df.write.mode("append").save_as_table("RAW.POSITIONS")
-        
-        return f"Success: Processed {processed_count} sessions. Loaded {len(all_positions_data)} position records."
-    
-    return "No data found to load."
+            except urllib.error.URLError as e:
+                print(f"Network error for session {s_key}: {e}")
+                # We continue to the next session rather than failing the whole batch
+                continue
+
+        return f"Success! Processed {sessions_processed} sessions. {total_row_count} rows loaded into {TARGET_TABLE}."
+            
+    # Top-level Error handling
+    except Exception as e:
+        return f"An unexpected error occurred: {e}"
 $$;
