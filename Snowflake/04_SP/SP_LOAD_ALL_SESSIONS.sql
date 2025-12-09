@@ -7,7 +7,8 @@ PACKAGES = ('snowflake-snowpark-python')
 HANDLER = 'main'
 EXTERNAL_ACCESS_INTEGRATIONS = (F1_API_INTEGRATION)
 EXECUTE AS OWNER
-AS '
+AS 
+$$
 import urllib.request
 import json
 import sys
@@ -59,4 +60,4 @@ def main(session):
         return "Error parsing JSON response."
     except Exception as e:
         return f"An unexpected error occurred: {e}"
-';
+$$;
