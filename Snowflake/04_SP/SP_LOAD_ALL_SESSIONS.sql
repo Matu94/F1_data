@@ -3,7 +3,7 @@ RETURNS VARCHAR
 LANGUAGE PYTHON
 COMMENT = 'F1 project: Get the data from the API endpoint and load it to the SESSIONS table'
 RUNTIME_VERSION = '3.9'
-PACKAGES = ('snowflake-snowpark-python')
+PACKAGES = ('snowflake-snowpark-python', 'requests')
 HANDLER = 'main'
 EXTERNAL_ACCESS_INTEGRATIONS = (F1_API_INTEGRATION)
 EXECUTE AS OWNER
