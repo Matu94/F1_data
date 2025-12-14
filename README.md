@@ -59,7 +59,7 @@ graph LR
 
 ## Roadmap
 
-- [ ] **Phase 1: Ingestion**
+- [X] **Phase 1: Ingestion**
     - Set up Snowflake Database/Schema structure.
     - Create Python extraction script for OpenF1.
     - Load initial 2025 Session and Driver data into RAW tables.
